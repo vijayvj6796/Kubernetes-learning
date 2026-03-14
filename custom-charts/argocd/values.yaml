@@ -1,0 +1,10 @@
+argo-cd:
+  server:
+    ingress:
+      enabled: true
+      ingressClassName: traefik
+      hostname: argo.tecminal.com
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        traefik.ingress.kubernetes.io/router.entrypoints: websecure
+      tls: true
