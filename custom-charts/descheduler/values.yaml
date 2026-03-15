@@ -11,7 +11,17 @@ descheduler:
               evictLocalStoragePods: false
           - name: PodLifeTime
             args:
-              maxPodLifeTimeSeconds: 86400    # evict pods older than 24 hours
+              maxPodLifeTimeSeconds: 86400
+          - name: LowNodeUtilization
+            args:
+              thresholds:
+                cpu: 20
+                memory: 20
+                pods: 20
+              targetThresholds:
+                cpu: 50
+                memory: 50
+                pods: 50
         plugins:
           balance:
             enabled:
