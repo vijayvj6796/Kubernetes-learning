@@ -1,5 +1,15 @@
 descheduler:
-  schedule: "*/30 * * * *"
+  schedule: "0 13 * * 2,4"
+
+  podSecurityContext:
+    fsGroup: 1000
+    seccompProfile:
+      type: RuntimeDefault
+  securityContext:
+    runAsGroup: 1000
+
+  nodeSelector:
+    kubernetes.io/os: linux
 
   deschedulerPolicy:
     profiles:
@@ -8,29 +18,42 @@ descheduler:
           - name: DefaultEvictor
             args:
               ignorePvcPods: true
-              evictLocalStoragePods: false
-          - name: PodLifeTime
+              evictLocalStoragePods: true
+          - name: RemoveDuplicates
+            args: {}
+          - name: RemovePodsHavingTooManyRestarts
             args:
-              maxPodLifeTimeSeconds: 86400
+              podRestartThreshold: 100
+              includingInitContainers: true
+          - name: RemovePodsViolatingNodeAffinity
+            args:
+              nodeAffinityType:
+                - requiredDuringSchedulingIgnoredDuringExecution
+          - name: RemovePodsViolatingNodeTaints
+            args: {}
+          - name: RemovePodsViolatingInterPodAntiAffinity
+            args: {}
+          - name: RemovePodsViolatingTopologySpreadConstraint
+            args: {}
           - name: LowNodeUtilization
             args:
               thresholds:
                 cpu: 20
-                memory: 20
-                pods: 20
+                memory: 30
+                pods: 30
               targetThresholds:
                 cpu: 50
-                memory: 50
+                memory: 75
                 pods: 50
-          - name: RemoveDuplicates
-            args:
-              excludeOwnerKinds:
-                - ReplicaSet
         plugins:
           balance:
             enabled:
               - LowNodeUtilization
               - RemoveDuplicates
+              - RemovePodsViolatingTopologySpreadConstraint
           deschedule:
             enabled:
-              - PodLifeTime
+              - RemovePodsHavingTooManyRestarts
+              - RemovePodsViolatingNodeAffinity
+              - RemovePodsViolatingNodeTaints
+              - RemovePodsViolatingInterPodAntiAffinity
